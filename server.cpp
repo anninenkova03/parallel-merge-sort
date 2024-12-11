@@ -75,18 +75,39 @@ int main() {
     }
 
     SOCKET serverSocket = socket(AF_INET, SOCK_STREAM, 0);
+    if (serverSocket == INVALID_SOCKET) {
+        std::cerr << "Socket creation failed\n";
+        WSACleanup();
+        return 1;
+    }
+
     sockaddr_in serverAddr{};
     serverAddr.sin_family = AF_INET;
     serverAddr.sin_addr.s_addr = INADDR_ANY;
     serverAddr.sin_port = htons(8080);
 
-    bind(serverSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr));
-    listen(serverSocket, 5);
+    if (bind(serverSocket, (SOCKADDR*)&serverAddr, sizeof(serverAddr)) == SOCKET_ERROR) {
+        std::cerr << "Bind failed\n";
+        closesocket(serverSocket);
+        WSACleanup();
+        return 1;
+    }
+
+    if (listen(serverSocket, 5) == SOCKET_ERROR) {
+        std::cerr << "Listen failed\n";
+        closesocket(serverSocket);
+        WSACleanup();
+        return 1;
+    }
 
     std::cout << "Server is running on port 8080...\n";
 
     while (true) {
         SOCKET clientSocket = accept(serverSocket, nullptr, nullptr);
+        if (clientSocket == INVALID_SOCKET) {
+            std::cerr << "Accept failed\n";
+            continue;
+        }
         std::thread(handleClient, clientSocket).detach();
     }
 
