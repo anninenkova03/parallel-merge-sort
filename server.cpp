@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <thread>
+#include <chrono>
 #include <algorithm>
 #include <cstring>
 #include <winsock2.h>
@@ -19,12 +20,21 @@ void merge(std::vector<int>& arr, int start, int mid, int end) {
     while (j < right.size()) arr[k++] = right[j++];
 }
 
-void mergeSort(std::vector<int>& arr, int start, int end) {
+void mergeSortSingleThread(std::vector<int>& arr, int start, int end) {
     if (start >= end) return;
 
     int mid = start + (end - start) / 2;
-    std::thread leftThread(mergeSort, std::ref(arr), start, mid);
-    std::thread rightThread(mergeSort, std::ref(arr), mid + 1, end);
+    mergeSortSingleThread(arr, start, mid);
+    mergeSortSingleThread(arr, mid + 1, end);
+    merge(arr, start, mid, end);
+}
+
+void mergeSortMultiThread(std::vector<int>& arr, int start, int end) {
+    if (start >= end) return;
+
+    int mid = start + (end - start) / 2;
+    std::thread leftThread(mergeSortMultiThread, std::ref(arr), start, mid);
+    std::thread rightThread(mergeSortMultiThread, std::ref(arr), mid + 1, end);
 
     leftThread.join();
     rightThread.join();
@@ -37,7 +47,21 @@ void handleClient(SOCKET clientSocket) {
     std::vector<int> data(size);
     recv(clientSocket, (char*)data.data(), size * sizeof(int), 0);
 
-    mergeSort(data, 0, size - 1);
+    std::vector<int> dataSingleThread = data; 
+
+    auto startSingleThread = std::chrono::high_resolution_clock::now();
+    mergeSortSingleThread(data, 0, size - 1);
+    auto endSingleThread = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> durationSingleThread = endSingleThread - startSingleThread;
+    double singleThreadTime = durationSingleThread.count() * 1000;
+    send(clientSocket, (char*)&singleThreadTime, sizeof(double), 0);
+
+    auto startMultiThread = std::chrono::high_resolution_clock::now();
+    mergeSortMultiThread(data, 0, size - 1);
+    auto endMultiThread = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> durationMultiThread = endMultiThread - startMultiThread;
+    double multiThreadTime = durationMultiThread.count() * 1000;
+    send(clientSocket, (char*)&multiThreadTime, sizeof(double), 0);
 
     send(clientSocket, (char*)data.data(), size * sizeof(int), 0);
     closesocket(clientSocket);

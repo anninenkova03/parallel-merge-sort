@@ -29,11 +29,19 @@ int main() {
     send(clientSocket, (char*)&size, sizeof(size), 0);
     send(clientSocket, (char*)data.data(), size * sizeof(int), 0);
 
+    double singleThreadTime;
+    recv(clientSocket, (char*)&singleThreadTime, sizeof(double), 0);
+
+    double multiThreadTime;
+    recv(clientSocket, (char*)&multiThreadTime, sizeof(double), 0);
+
     recv(clientSocket, (char*)data.data(), size * sizeof(int), 0);
 
     std::cout << "Sorted data: ";
     for (int num : data) std::cout << num << " ";
     std::cout << "\n";
+    std::cout << "Single thread sort time: " << singleThreadTime << " ms\n";
+    std::cout << "Multi thread sort time: " << multiThreadTime << " ms\n";
 
     closesocket(clientSocket);
     WSACleanup();
