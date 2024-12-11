@@ -50,6 +50,17 @@ void mergeSortMultiThread(std::vector<int>& arr, int start, int end, int threadC
 void handleClient(SOCKET clientSocket) {
     int size;
     recv(clientSocket, (char*)&size, sizeof(size), 0);
+
+    if (size == 0) {
+        std::vector<int> emptyData;  // Empty vector
+        double emptySortTime = 0.0;
+        send(clientSocket, (char*)&emptySortTime, sizeof(double), 0);
+        send(clientSocket, (char*)&emptySortTime, sizeof(double), 0);
+        send(clientSocket, (char*)emptyData.data(), 0, 0);  // Send empty data back
+        closesocket(clientSocket);
+        return;
+    }
+    
     std::vector<int> data(size);
     recv(clientSocket, (char*)data.data(), size * sizeof(int), 0);
 
