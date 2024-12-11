@@ -29,15 +29,21 @@ void mergeSortSingleThread(std::vector<int>& arr, int start, int end) {
     merge(arr, start, mid, end);
 }
 
-void mergeSortMultiThread(std::vector<int>& arr, int start, int end) {
+void mergeSortMultiThread(std::vector<int>& arr, int start, int end, int threadCount = 0) {
     if (start >= end) return;
 
     int mid = start + (end - start) / 2;
-    std::thread leftThread(mergeSortMultiThread, std::ref(arr), start, mid);
-    std::thread rightThread(mergeSortMultiThread, std::ref(arr), mid + 1, end);
 
-    leftThread.join();
-    rightThread.join();
+    if (threadCount < std::thread::hardware_concurrency()) {
+        std::thread leftThread(mergeSortMultiThread, std::ref(arr), start, mid, threadCount + 1);
+        std::thread rightThread(mergeSortMultiThread, std::ref(arr), mid + 1, end, threadCount + 1);
+        leftThread.join();
+        rightThread.join();
+    } else {
+        mergeSortSingleThread(arr, start, mid);
+        mergeSortSingleThread(arr, mid + 1, end);
+    }
+
     merge(arr, start, mid, end);
 }
 
