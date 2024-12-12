@@ -52,15 +52,15 @@ void handleClient(SOCKET clientSocket) {
     recv(clientSocket, (char*)&size, sizeof(size), 0);
 
     if (size == 0) {
-        std::vector<int> emptyData;  // Empty vector
+        std::vector<int> emptyData;
         double emptySortTime = 0.0;
         send(clientSocket, (char*)&emptySortTime, sizeof(double), 0);
         send(clientSocket, (char*)&emptySortTime, sizeof(double), 0);
-        send(clientSocket, (char*)emptyData.data(), 0, 0);  // Send empty data back
+        send(clientSocket, (char*)emptyData.data(), 0, 0);
         closesocket(clientSocket);
         return;
     }
-    
+
     std::vector<int> data(size);
     recv(clientSocket, (char*)data.data(), size * sizeof(int), 0);
 
